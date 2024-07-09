@@ -1,5 +1,5 @@
-use relm4::prelude::*;
 use gtk::prelude::*;
+use relm4::prelude::*;
 
 use anime_launcher_sdk::zzz::config::schema::prelude::LauncherBehavior;
 
@@ -18,7 +18,7 @@ pub fn launch(sender: ComponentSender<App>) {
         }
 
         // Hide launcher window if behavior set to "Hide" or "Close"
-        LauncherBehavior::Hide | LauncherBehavior::Close => sender.input(AppMsg::HideWindow)
+        LauncherBehavior::Hide | LauncherBehavior::Close => sender.input(AppMsg::HideWindow),
     }
 
     std::thread::spawn(move || {
@@ -27,7 +27,7 @@ pub fn launch(sender: ComponentSender<App>) {
 
             sender.input(AppMsg::Toast {
                 title: tr!("game-launching-failed"),
-                description: Some(err.to_string())
+                description: Some(err.to_string()),
             });
         }
 
@@ -45,7 +45,7 @@ pub fn launch(sender: ComponentSender<App>) {
             // We're calling quit method from the main context here because otherwise app won't be closed properly
             LauncherBehavior::Close => gtk::glib::MainContext::default().invoke(|| {
                 relm4::main_application().quit();
-            })
+            }),
         }
     });
 }

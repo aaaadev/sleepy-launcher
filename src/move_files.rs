@@ -1,5 +1,5 @@
-use std::path::Path;
 use std::io::Result;
+use std::path::Path;
 
 /// Move files from one folder to another
 pub fn move_files(from: impl AsRef<Path>, to: impl AsRef<Path>) -> Result<()> {
@@ -12,18 +12,13 @@ pub fn move_files(from: impl AsRef<Path>, to: impl AsRef<Path>) -> Result<()> {
                 std::fs::create_dir_all(&target)
                     .and_then(|_| move_files(&source, &target))
                     .and_then(|_| std::fs::remove_dir_all(&source))?;
-            }
-
-            else if source.is_symlink() {
+            } else if source.is_symlink() {
                 std::fs::read_link(&source)
                     .and_then(|link_target| std::os::unix::fs::symlink(link_target, &target))
                     .and_then(|_| std::fs::remove_file(&source))?;
+            } else {
+                std::fs::copy(&source, &target).and_then(|_| std::fs::remove_file(&source))?;
             }
-
-            else {
-                std::fs::copy(&source, &target)
-                    .and_then(|_| std::fs::remove_file(&source))?;
-            } 
         }
     }
 

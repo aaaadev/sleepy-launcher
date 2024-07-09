@@ -6,8 +6,8 @@ use relm4::prelude::*;
 use anime_launcher_sdk::config::ConfigExt;
 use anime_launcher_sdk::zzz::config::{Config, Schema};
 
-use anime_launcher_sdk::zzz::states::LauncherState;
 use anime_launcher_sdk::zzz::consts::*;
+use anime_launcher_sdk::zzz::states::LauncherState;
 
 use anime_launcher_sdk::anime_game_core::prelude::*;
 use anime_launcher_sdk::anime_game_core::zzz::prelude::*;
@@ -15,16 +15,16 @@ use anime_launcher_sdk::anime_game_core::zzz::prelude::*;
 use anime_launcher_sdk::sessions::SessionsExt;
 use anime_launcher_sdk::zzz::sessions::Sessions;
 
-use tracing_subscriber::prelude::*;
 use tracing_subscriber::filter::*;
+use tracing_subscriber::prelude::*;
 
-pub mod move_files;
-pub mod i18n;
 pub mod background;
+pub mod i18n;
+pub mod move_files;
 pub mod ui;
 
-use ui::main::*;
 use ui::first_run::main::*;
+use ui::main::*;
 
 pub const APP_ID: &str = "moe.launcher.sleepy-launcher";
 pub const APP_RESOURCE_PATH: &str = "/moe/launcher/sleepy-launcher";
@@ -65,12 +65,12 @@ lazy_static::lazy_static! {
     pub static ref BACKGROUND_PRIMARY_FILE: PathBuf = LAUNCHER_FOLDER.join("background-primary");
 
     /// Path to `.keep-background` file. Used to mark launcher that it shouldn't update background picture
-    /// 
+    ///
     /// Standard is `$HOME/.local/share/anime-game-launcher/.keep-background`
     pub static ref KEEP_BACKGROUND_FILE: PathBuf = LAUNCHER_FOLDER.join(".keep-background");
 
     /// Path to `.first-run` file. Used to mark launcher that it should run FirstRun window
-    /// 
+    ///
     /// Standard is `$HOME/.local/share/anime-game-launcher/.first-run`
     pub static ref FIRST_RUN_FILE: PathBuf = LAUNCHER_FOLDER.join(".first-run");
 
@@ -111,7 +111,8 @@ fn main() -> anyhow::Result<()> {
 
     // Create launcher folder if it isn't
     if !LAUNCHER_FOLDER.exists() {
-        std::fs::create_dir_all(LAUNCHER_FOLDER.as_path()).expect("Failed to create launcher folder");
+        std::fs::create_dir_all(LAUNCHER_FOLDER.as_path())
+            .expect("Failed to create launcher folder");
 
         // This one is kinda critical buy well, I can't do something with it
         std::fs::write(FIRST_RUN_FILE.as_path(), "").expect("Failed to create .first-run file");
@@ -143,9 +144,9 @@ fn main() -> anyhow::Result<()> {
     // Parse arguments
     for i in 0..args.len() {
         match args[i].as_str() {
-            "--debug"              => force_debug        = true,
-            "--run-game"           => run_game           = true,
-            "--just-run-game"      => just_run_game      = true,
+            "--debug" => force_debug = true,
+            "--run-game" => run_game = true,
+            "--just-run-game" => just_run_game = true,
             "--no-verbose-tracing" => no_verbose_tracing = true,
 
             "--session" => {
@@ -153,9 +154,9 @@ fn main() -> anyhow::Result<()> {
                 if let Some(session) = args.get(i + 1) {
                     Sessions::set_current(session.to_owned())?;
                 }
-            },
+            }
 
-            arg => gtk_args.push(arg.to_string())
+            arg => gtk_args.push(arg.to_string()),
         }
     }
 
@@ -180,9 +181,7 @@ fn main() -> anyhow::Result<()> {
         .pretty()
         .with_ansi(false)
         .with_writer(std::sync::Arc::new(file))
-        .with_filter(filter_fn(|metadata| {
-            !metadata.target().contains("rustls")
-        }));
+        .with_filter(filter_fn(|metadata| !metadata.target().contains("rustls")));
 
     tracing_subscriber::registry()
         .with(stdout)
@@ -206,7 +205,11 @@ fn main() -> anyhow::Result<()> {
     gtk::glib::set_program_name(Some("Sleepy Launcher"));
 
     // Set UI language
-    let lang = CONFIG.launcher.language.parse().expect("Wrong language format used in config");
+    let lang = CONFIG
+        .launcher
+        .language
+        .parse()
+        .expect("Wrong language format used in config");
 
     i18n::set_lang(lang).expect("Failed to set launcher language");
 
@@ -215,8 +218,7 @@ fn main() -> anyhow::Result<()> {
     // Run FirstRun window if .first-run file persist
     if FIRST_RUN_FILE.exists() {
         // Create the app
-        let app = RelmApp::new(APP_ID)
-            .with_args(gtk_args);
+        let app = RelmApp::new(APP_ID).with_args(gtk_args);
 
         // Set global css
         app.set_global_css(&GLOBAL_CSS);
@@ -224,12 +226,11 @@ fn main() -> anyhow::Result<()> {
         // Show first run window
         app.run::<FirstRunApp>(());
     }
-
     // Run the app if everything's ready
     else {
         if run_game || just_run_game {
-            let state = LauncherState::get_from_config(|_| {})
-                .expect("Failed to get launcher state");
+            let state =
+                LauncherState::get_from_config(|_| {}).expect("Failed to get launcher state");
 
             match state {
                 LauncherState::Launch => {
@@ -244,13 +245,12 @@ fn main() -> anyhow::Result<()> {
                     return Ok(());
                 }
 
-                _ => ()
+                _ => (),
             }
         }
 
         // Create the app
-        let app = RelmApp::new(APP_ID)
-            .with_args(gtk_args);
+        let app = RelmApp::new(APP_ID).with_args(gtk_args);
 
         // Set global css
         app.set_global_css(&GLOBAL_CSS);

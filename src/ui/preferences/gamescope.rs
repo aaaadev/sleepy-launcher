@@ -1,5 +1,5 @@
-use relm4::prelude::*;
 use adw::prelude::*;
+use relm4::prelude::*;
 
 use anime_launcher_sdk::config::ConfigExt;
 use anime_launcher_sdk::zzz::config::Config;
@@ -46,7 +46,7 @@ impl SimpleAsyncComponent for GamescopeApp {
                             if is_ready() {
                                 if let Ok(mut config) = Config::get() {
                                     config.game.enhancements.gamescope.game.width = row.text().parse().unwrap_or_default();
-    
+
                                     Config::update(config);
                                 }
                             }
@@ -67,7 +67,7 @@ impl SimpleAsyncComponent for GamescopeApp {
                             if is_ready() {
                                 if let Ok(mut config) = Config::get() {
                                     config.game.enhancements.gamescope.game.height = row.text().parse().unwrap_or_default();
-    
+
                                     Config::update(config);
                                 }
                             }
@@ -92,7 +92,7 @@ impl SimpleAsyncComponent for GamescopeApp {
                             if is_ready() {
                                 if let Ok(mut config) = Config::get() {
                                     config.game.enhancements.gamescope.gamescope.width = row.text().parse().unwrap_or_default();
-    
+
                                     Config::update(config);
                                 }
                             }
@@ -113,7 +113,7 @@ impl SimpleAsyncComponent for GamescopeApp {
                             if is_ready() {
                                 if let Ok(mut config) = Config::get() {
                                     config.game.enhancements.gamescope.gamescope.height = row.text().parse().unwrap_or_default();
-    
+
                                     Config::update(config);
                                 }
                             }
@@ -204,7 +204,7 @@ impl SimpleAsyncComponent for GamescopeApp {
                             if is_ready() {
                                 if let Ok(mut config) = Config::get() {
                                     config.game.enhancements.gamescope.framerate.focused = row.text().parse().unwrap_or_default();
-    
+
                                     Config::update(config);
                                 }
                             }
@@ -225,7 +225,7 @@ impl SimpleAsyncComponent for GamescopeApp {
                             if is_ready() {
                                 if let Ok(mut config) = Config::get() {
                                     config.game.enhancements.gamescope.framerate.unfocused = row.text().parse().unwrap_or_default();
-    
+
                                     Config::update(config);
                                 }
                             }
@@ -247,7 +247,7 @@ impl SimpleAsyncComponent for GamescopeApp {
                             if is_ready() {
                                 if let Ok(mut config) = Config::get() {
                                     config.game.enhancements.gamescope.window_type = WindowType::from_ordinal_unsafe(row.selected() as i8);
-    
+
                                     Config::update(config);
                                 }
                             }
@@ -278,7 +278,11 @@ impl SimpleAsyncComponent for GamescopeApp {
         }
     }
 
-    async fn init(_init: Self::Init, root: Self::Root, _sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
+    async fn init(
+        _init: Self::Init,
+        root: Self::Root,
+        _sender: AsyncComponentSender<Self>,
+    ) -> AsyncComponentParts<Self> {
         tracing::info!("Initializing gamescope settings");
 
         let model = Self;

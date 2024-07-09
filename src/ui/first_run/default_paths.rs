@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
-use relm4::prelude::*;
 use adw::prelude::*;
+use relm4::prelude::*;
 
-use crate::*;
 use crate::ui::components::progress_bar::*;
+use crate::*;
 
 use super::main::*;
 
@@ -22,7 +22,7 @@ pub struct DefaultPathsApp {
     game_global: PathBuf,
     game_china: PathBuf,
     components: PathBuf,
-    temp: PathBuf
+    temp: PathBuf,
 }
 
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ pub enum Folders {
     GameGlobal,
     GameChina,
     Components,
-    Temp
+    Temp,
 }
 
 #[derive(Debug, Clone)]
@@ -42,7 +42,7 @@ pub enum DefaultPathsAppMsg {
     ToggleShowAdditional,
     ChoosePath(Folders),
     Continue,
-    Exit
+    Exit,
 }
 
 #[relm4::component(async, pub)]
@@ -271,14 +271,18 @@ impl SimpleAsyncComponent for DefaultPathsApp {
         }
     }
 
-    async fn init(init: Self::Init, root: Self::Root, _sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
+    async fn init(
+        init: Self::Init,
+        root: Self::Root,
+        _sender: AsyncComponentSender<Self>,
+    ) -> AsyncComponentParts<Self> {
         let model = Self {
             progress_bar: ProgressBar::builder()
                 .launch(ProgressBarInit {
                     caption: None,
                     display_progress: true,
                     display_fraction: false,
-                    visible: false
+                    visible: false,
                 })
                 .detach(),
 
@@ -295,7 +299,7 @@ impl SimpleAsyncComponent for DefaultPathsApp {
             components: CONFIG.components.path.clone(),
 
             #[allow(clippy::or_fun_call)]
-            temp: CONFIG.launcher.temp.clone().unwrap_or(std::env::temp_dir())
+            temp: CONFIG.launcher.temp.clone().unwrap_or(std::env::temp_dir()),
         };
 
         // Set progress bar width
@@ -308,37 +312,40 @@ impl SimpleAsyncComponent for DefaultPathsApp {
 
     async fn update(&mut self, msg: Self::Input, sender: AsyncComponentSender<Self>) {
         match msg {
-            DefaultPathsAppMsg::ToggleShowAdditional => self.show_additional = !self.show_additional,
+            DefaultPathsAppMsg::ToggleShowAdditional => {
+                self.show_additional = !self.show_additional
+            }
 
             DefaultPathsAppMsg::ChoosePath(folder) => {
                 let result = rfd::AsyncFileDialog::new()
                     .set_directory(&self.launcher)
-                    .pick_folder().await;
+                    .pick_folder()
+                    .await;
 
                 if let Some(result) = result {
                     let result = result.path().to_path_buf();
 
                     match folder {
                         Folders::Launcher => {
-                            self.runners      = result.join("runners");
-                            self.dxvks        = result.join("dxvks");
-                            self.prefix       = result.join("prefix");
-                            self.game_global  = result.join(concat!("Zen", "less Z", "one Zero"));
-                            self.game_china   = result.join(concat!("Zen", "less Z", "one Zero"));
-                            self.components   = result.join("components");
+                            self.runners = result.join("runners");
+                            self.dxvks = result.join("dxvks");
+                            self.prefix = result.join("prefix");
+                            self.game_global = result.join(concat!("Zen", "less Z", "one Zero"));
+                            self.game_china = result.join(concat!("Zen", "less Z", "one Zero"));
+                            self.components = result.join("components");
 
                             self.temp.clone_from(&result);
 
                             self.launcher = result;
                         }
 
-                        Folders::Runners     => self.runners      = result,
-                        Folders::DXVK        => self.dxvks        = result,
-                        Folders::Prefix      => self.prefix       = result,
-                        Folders::GameGlobal  => self.game_global  = result,
-                        Folders::GameChina   => self.game_china   = result,
-                        Folders::Components  => self.components   = result,
-                        Folders::Temp        => self.temp         = result
+                        Folders::Runners => self.runners = result,
+                        Folders::DXVK => self.dxvks = result,
+                        Folders::Prefix => self.prefix = result,
+                        Folders::GameGlobal => self.game_global = result,
+                        Folders::GameChina => self.game_china = result,
+                        Folders::Components => self.components = result,
+                        Folders::Temp => self.temp = result,
                     }
                 }
             }
@@ -350,7 +357,9 @@ impl SimpleAsyncComponent for DefaultPathsApp {
                 match self.update_config() {
                     Ok(_) => {
                         if self.migrate_installation {
-                            self.progress_bar.sender().send(ProgressBarMsg::SetVisible(true));
+                            self.progress_bar
+                                .sender()
+                                .send(ProgressBarMsg::SetVisible(true));
 
                             self.show_progress = true;
 
@@ -359,31 +368,43 @@ impl SimpleAsyncComponent for DefaultPathsApp {
                                 (old_config.game.dxvk.builds, &self.dxvks),
                                 (old_config.game.wine.prefix, &self.prefix),
                                 (old_config.game.path.global, &self.game_global),
-                                (old_config.game.path.china,  &self.game_china),
-                                (old_config.components.path,  &self.components)
+                                (old_config.game.path.china, &self.game_china),
+                                (old_config.components.path, &self.components),
                             ];
 
                             #[allow(clippy::expect_fun_call)]
                             for (i, (from, to)) in folders.iter().enumerate() {
-                                self.progress_bar.sender().send(ProgressBarMsg::UpdateCaption(Some(
-                                    from.to_str().map(|str| str.to_string()).unwrap_or_else(|| format!("{:?}", from))
-                                )));
+                                self.progress_bar
+                                    .sender()
+                                    .send(ProgressBarMsg::UpdateCaption(Some(
+                                        from.to_str()
+                                            .map(|str| str.to_string())
+                                            .unwrap_or_else(|| format!("{:?}", from)),
+                                    )));
 
                                 if &from != to && from.exists() {
-                                    move_files::move_files(from, to).expect(&format!("Failed to move folder: {:?} -> {:?}", from, to));
+                                    move_files::move_files(from, to).expect(&format!(
+                                        "Failed to move folder: {:?} -> {:?}",
+                                        from, to
+                                    ));
                                 }
 
-                                self.progress_bar.sender().send(ProgressBarMsg::UpdateProgress(i as u64 + 1, folders.len() as u64));
+                                self.progress_bar
+                                    .sender()
+                                    .send(ProgressBarMsg::UpdateProgress(
+                                        i as u64 + 1,
+                                        folders.len() as u64,
+                                    ));
                             }
 
                             // Restart the app
 
-                            std::process::Command::new(std::env::current_exe().unwrap()).spawn().unwrap();
+                            std::process::Command::new(std::env::current_exe().unwrap())
+                                .spawn()
+                                .unwrap();
 
                             relm4::main_application().quit();
-                        }
-
-                        else {
+                        } else {
                             sender.output(Self::Output::ScrollToDownloadComponents);
                         }
                     }
@@ -391,7 +412,7 @@ impl SimpleAsyncComponent for DefaultPathsApp {
                     Err(err) => {
                         sender.output(Self::Output::Toast {
                             title: tr!("config-update-error"),
-                            description: Some(err.to_string())
+                            description: Some(err.to_string()),
                         });
                     }
                 }
@@ -401,9 +422,7 @@ impl SimpleAsyncComponent for DefaultPathsApp {
                 if self.migrate_installation {
                     // TODO: this shit should return message to general preferences component somehow to close MigrateInstallation window
                     todo!();
-                }
-
-                else {
+                } else {
                     relm4::main_application().quit();
                 }
             }

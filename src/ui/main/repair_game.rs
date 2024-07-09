@@ -1,12 +1,9 @@
-use relm4::{
-    prelude::*,
-    Sender
-};
+use relm4::{prelude::*, Sender};
 
 use gtk::glib::clone;
 
-use crate::*;
 use crate::ui::components::*;
+use crate::*;
 
 use super::{App, AppMsg};
 
@@ -20,7 +17,11 @@ pub fn repair_game(sender: ComponentSender<App>, progress_bar_input: Sender<Prog
     std::thread::spawn(move || {
         match repairer::try_get_integrity_files(config.launcher.edition, None) {
             Ok(files) => {
-                let game_path = config.game.path.for_edition(config.launcher.edition).to_path_buf();
+                let game_path = config
+                    .game
+                    .path
+                    .for_edition(config.launcher.edition)
+                    .to_path_buf();
 
                 progress_bar_input.send(ProgressBarMsg::UpdateProgress(0, 0));
 
@@ -87,11 +88,16 @@ pub fn repair_game(sender: ComponentSender<App>, progress_bar_input: Sender<Prog
                 if !broken.is_empty() {
                     let total = broken.len() as u64;
 
-                    progress_bar_input.send(ProgressBarMsg::UpdateCaption(Some(tr!("repairing-files"))));
+                    progress_bar_input
+                        .send(ProgressBarMsg::UpdateCaption(Some(tr!("repairing-files"))));
                     progress_bar_input.send(ProgressBarMsg::DisplayFraction(false));
                     progress_bar_input.send(ProgressBarMsg::UpdateProgress(0, total));
 
-                    tracing::warn!("Found broken files:\n{}", broken.iter().fold(String::new(), |acc, file| acc + &format!("- {}\n", file.path.to_string_lossy())));
+                    tracing::warn!(
+                        "Found broken files:\n{}",
+                        broken.iter().fold(String::new(), |acc, file| acc
+                            + &format!("- {}\n", file.path.to_string_lossy()))
+                    );
 
                     for (i, file) in broken.into_iter().enumerate() {
                         tracing::debug!("Repairing file: {}", file.path.to_string_lossy());
@@ -99,13 +105,14 @@ pub fn repair_game(sender: ComponentSender<App>, progress_bar_input: Sender<Prog
                         if let Err(err) = file.repair(&game_path) {
                             sender.input(AppMsg::Toast {
                                 title: tr!("game-file-repairing-error"),
-                                description: Some(err.to_string())
+                                description: Some(err.to_string()),
                             });
 
                             tracing::error!("Failed to repair game file: {err}");
                         }
 
-                        progress_bar_input.send(ProgressBarMsg::UpdateProgress(i as u64 + 1, total));
+                        progress_bar_input
+                            .send(ProgressBarMsg::UpdateProgress(i as u64 + 1, total));
                     }
 
                     progress_bar_input.send(ProgressBarMsg::DisplayFraction(true));
@@ -117,7 +124,7 @@ pub fn repair_game(sender: ComponentSender<App>, progress_bar_input: Sender<Prog
 
                 sender.input(AppMsg::Toast {
                     title: tr!("integrity-files-getting-error"),
-                    description: Some(err.to_string())
+                    description: Some(err.to_string()),
                 });
             }
         }

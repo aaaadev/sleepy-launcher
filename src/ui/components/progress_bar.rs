@@ -1,5 +1,5 @@
-use relm4::prelude::*;
 use adw::prelude::*;
+use relm4::prelude::*;
 
 use anime_launcher_sdk::anime_game_core::prelude::*;
 use anime_launcher_sdk::anime_game_core::zzz::prelude::*;
@@ -15,7 +15,7 @@ pub struct ProgressBarInit {
     /// Add `(XX MB of YY MB)` suffix
     pub display_fraction: bool,
 
-    pub visible: bool
+    pub visible: bool,
 }
 
 pub struct ProgressBar {
@@ -31,7 +31,7 @@ pub struct ProgressBar {
     /// Add `(XX MB of YY MB)` suffix
     pub display_fraction: bool,
 
-    pub visible: bool
+    pub visible: bool,
 }
 
 #[derive(Debug)]
@@ -41,11 +41,11 @@ pub enum ProgressBarMsg {
     DisplayProgress(bool),
     DisplayFraction(bool),
 
-    /// (current bytes, total bytes) 
+    /// (current bytes, total bytes)
     UpdateProgress(u64, u64),
 
     UpdateFromState(DiffUpdate),
-    SetVisible(bool)
+    SetVisible(bool),
 }
 
 #[relm4::component(async, pub)]
@@ -99,7 +99,7 @@ impl SimpleAsyncComponent for ProgressBar {
             downloaded: None,
             display_progress: init.display_progress,
             display_fraction: init.display_fraction,
-            visible: init.visible
+            visible: init.visible,
         };
 
         let widgets = view_output!();
@@ -122,59 +122,71 @@ impl SimpleAsyncComponent for ProgressBar {
             ProgressBarMsg::UpdateProgress(curr, total) => {
                 self.fraction = curr as f64 / total as f64;
 
-                self.downloaded = Some((
-                    prettify_bytes(curr),
-                    prettify_bytes(total)
-                ));
+                self.downloaded = Some((prettify_bytes(curr), prettify_bytes(total)));
             }
 
-            ProgressBarMsg::UpdateFromState(state) => {
-                match state {
-                    DiffUpdate::CheckingFreeSpace(_) |
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::CheckingFreeSpace(_)) => self.caption = Some(tr!("checking-free-space")),
-
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::DownloadingStarted(_))         => self.caption = Some(tr!("downloading")),
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::UpdatingPermissionsStarted(_)) => self.caption = Some(tr!("updating-permissions")),
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::UnpackingStarted(_))           => self.caption = Some(tr!("unpacking")),
-
-                    DiffUpdate::ApplyingHdiffStarted => {
-                        self.caption = Some(tr!("applying-hdiff"));
-
-                        self.display_fraction = false;
-                    },
-
-                    DiffUpdate::RemovingOutdatedStarted => {
-                        self.caption = Some(tr!("removing-outdated"));
-
-                        self.display_fraction = false;
-                    },
-
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::DownloadingProgress(curr, total)) |
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::UpdatingPermissions(curr, total)) |
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::UnpackingProgress(curr, total)) |
-                    DiffUpdate::ApplyingHdiffProgress(curr, total) |
-                    DiffUpdate::RemovingOutdatedProgress(curr, total) => {
-                        self.fraction = curr as f64 / total as f64;
-
-                        self.downloaded = Some((
-                            prettify_bytes(curr),
-                            prettify_bytes(total)
-                        ));
-                    }
-
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::DownloadingFinished)         => tracing::info!("Downloading finished"),
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::UpdatingPermissionsFinished) => tracing::info!("Updating permissions finished"),
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::UnpackingFinished)           => tracing::info!("Unpacking finished"),
-
-                    DiffUpdate::ApplyingHdiffFinished    => tracing::info!("Applying hdiffs finished"),
-                    DiffUpdate::RemovingOutdatedFinished => tracing::info!("Removing outdated files finished"),
-
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::DownloadingError(err)) => tracing::error!("Downloading error: {:?}", err),
-                    DiffUpdate::InstallerUpdate(InstallerUpdate::UnpackingError(err)) => tracing::error!("Unpacking error: {:?}", err)
+            ProgressBarMsg::UpdateFromState(state) => match state {
+                DiffUpdate::CheckingFreeSpace(_)
+                | DiffUpdate::InstallerUpdate(InstallerUpdate::CheckingFreeSpace(_)) => {
+                    self.caption = Some(tr!("checking-free-space"))
                 }
-            }
 
-            ProgressBarMsg::SetVisible(visible) => self.visible = visible
+                DiffUpdate::InstallerUpdate(InstallerUpdate::DownloadingStarted(_)) => {
+                    self.caption = Some(tr!("downloading"))
+                }
+                DiffUpdate::InstallerUpdate(InstallerUpdate::UpdatingPermissionsStarted(_)) => {
+                    self.caption = Some(tr!("updating-permissions"))
+                }
+                DiffUpdate::InstallerUpdate(InstallerUpdate::UnpackingStarted(_)) => {
+                    self.caption = Some(tr!("unpacking"))
+                }
+
+                DiffUpdate::ApplyingHdiffStarted => {
+                    self.caption = Some(tr!("applying-hdiff"));
+
+                    self.display_fraction = false;
+                }
+
+                DiffUpdate::RemovingOutdatedStarted => {
+                    self.caption = Some(tr!("removing-outdated"));
+
+                    self.display_fraction = false;
+                }
+
+                DiffUpdate::InstallerUpdate(InstallerUpdate::DownloadingProgress(curr, total))
+                | DiffUpdate::InstallerUpdate(InstallerUpdate::UpdatingPermissions(curr, total))
+                | DiffUpdate::InstallerUpdate(InstallerUpdate::UnpackingProgress(curr, total))
+                | DiffUpdate::ApplyingHdiffProgress(curr, total)
+                | DiffUpdate::RemovingOutdatedProgress(curr, total) => {
+                    self.fraction = curr as f64 / total as f64;
+
+                    self.downloaded = Some((prettify_bytes(curr), prettify_bytes(total)));
+                }
+
+                DiffUpdate::InstallerUpdate(InstallerUpdate::DownloadingFinished) => {
+                    tracing::info!("Downloading finished")
+                }
+                DiffUpdate::InstallerUpdate(InstallerUpdate::UpdatingPermissionsFinished) => {
+                    tracing::info!("Updating permissions finished")
+                }
+                DiffUpdate::InstallerUpdate(InstallerUpdate::UnpackingFinished) => {
+                    tracing::info!("Unpacking finished")
+                }
+
+                DiffUpdate::ApplyingHdiffFinished => tracing::info!("Applying hdiffs finished"),
+                DiffUpdate::RemovingOutdatedFinished => {
+                    tracing::info!("Removing outdated files finished")
+                }
+
+                DiffUpdate::InstallerUpdate(InstallerUpdate::DownloadingError(err)) => {
+                    tracing::error!("Downloading error: {:?}", err)
+                }
+                DiffUpdate::InstallerUpdate(InstallerUpdate::UnpackingError(err)) => {
+                    tracing::error!("Unpacking error: {:?}", err)
+                }
+            },
+
+            ProgressBarMsg::SetVisible(visible) => self.visible = visible,
         }
     }
 }

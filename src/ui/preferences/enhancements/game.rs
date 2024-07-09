@@ -1,5 +1,5 @@
-use relm4::prelude::*;
 use relm4::factory::*;
+use relm4::prelude::*;
 
 use adw::prelude::*;
 
@@ -14,7 +14,7 @@ use super::EnhancementsAppMsg;
 struct GameSession {
     name: String,
     description: Option<String>,
-    check_button: gtk::CheckButton
+    check_button: gtk::CheckButton,
 }
 
 #[relm4::factory(async)]
@@ -74,7 +74,11 @@ impl AsyncFactoryComponent for GameSession {
         }
     }
 
-    async fn init_model(init: Self::Init, _index: &DynamicIndex, _sender: AsyncFactorySender<Self>) -> Self {
+    async fn init_model(
+        init: Self::Init,
+        _index: &DynamicIndex,
+        _sender: AsyncFactorySender<Self>,
+    ) -> Self {
         init
     }
 }
@@ -83,7 +87,7 @@ pub struct GamePage {
     sessions: AsyncFactoryVecDeque<GameSession>,
 
     sessions_root_widget: gtk::CheckButton,
-    session_name_entry: adw::EntryRow
+    session_name_entry: adw::EntryRow,
 }
 
 #[derive(Debug, Clone)]
@@ -91,7 +95,7 @@ pub enum GamePageMsg {
     AddSession,
     UpdateSession(usize),
     RemoveSession(usize),
-    SetCurrent(usize)
+    SetCurrent(usize),
 }
 
 #[relm4::component(async, pub)]
@@ -142,7 +146,11 @@ impl SimpleAsyncComponent for GamePage {
         }
     }
 
-    async fn init(_init: Self::Init, root: Self::Root, sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
+    async fn init(
+        _init: Self::Init,
+        root: Self::Root,
+        sender: AsyncComponentSender<Self>,
+    ) -> AsyncComponentParts<Self> {
         tracing::info!("Initializing game settings");
 
         let mut model = Self {
@@ -151,7 +159,7 @@ impl SimpleAsyncComponent for GamePage {
                 .forward(sender.input_sender(), std::convert::identity),
 
             sessions_root_widget: gtk::CheckButton::new(),
-            session_name_entry: adw::EntryRow::new()
+            session_name_entry: adw::EntryRow::new(),
         };
 
         let current = Sessions::get_current().unwrap_or_default();
@@ -168,7 +176,7 @@ impl SimpleAsyncComponent for GamePage {
             model.sessions.guard().push_back(GameSession {
                 name,
                 description: None,
-                check_button
+                check_button,
             });
         }
 
@@ -199,15 +207,17 @@ impl SimpleAsyncComponent for GamePage {
                                 self.sessions.guard().push_back(GameSession {
                                     name,
                                     description: None,
-                                    check_button
+                                    check_button,
                                 });
                             }
 
                             Err(err) => {
-                                sender.output(EnhancementsAppMsg::Toast {
-                                    title: tr!("game-session-add-failed"),
-                                    description: Some(err.to_string())
-                                }).unwrap();
+                                sender
+                                    .output(EnhancementsAppMsg::Toast {
+                                        title: tr!("game-session-add-failed"),
+                                        description: Some(err.to_string()),
+                                    })
+                                    .unwrap();
                             }
                         }
                     }
@@ -217,11 +227,15 @@ impl SimpleAsyncComponent for GamePage {
             GamePageMsg::UpdateSession(index) => {
                 if let Some(session) = self.sessions.guard().get(index) {
                     if let Ok(config) = Config::get() {
-                        if let Err(err) = Sessions::update(session.name.clone(), config.get_wine_prefix_path()) {
-                            sender.output(EnhancementsAppMsg::Toast {
-                                title: tr!("game-session-update-failed"),
-                                description: Some(err.to_string())
-                            }).unwrap();
+                        if let Err(err) =
+                            Sessions::update(session.name.clone(), config.get_wine_prefix_path())
+                        {
+                            sender
+                                .output(EnhancementsAppMsg::Toast {
+                                    title: tr!("game-session-update-failed"),
+                                    description: Some(err.to_string()),
+                                })
+                                .unwrap();
                         }
                     }
                 }
@@ -230,10 +244,12 @@ impl SimpleAsyncComponent for GamePage {
             GamePageMsg::RemoveSession(index) => {
                 if let Some(session) = self.sessions.guard().get(index) {
                     if let Err(err) = Sessions::remove(&session.name) {
-                        sender.output(EnhancementsAppMsg::Toast {
-                            title: tr!("game-session-remove-failed"),
-                            description: Some(err.to_string())
-                        }).unwrap();
+                        sender
+                            .output(EnhancementsAppMsg::Toast {
+                                title: tr!("game-session-remove-failed"),
+                                description: Some(err.to_string()),
+                            })
+                            .unwrap();
 
                         return;
                     }
@@ -250,20 +266,26 @@ impl SimpleAsyncComponent for GamePage {
                 if let Some(session) = self.sessions.guard().get(index) {
                     if let Ok(config) = Config::get() {
                         if let Err(err) = Sessions::set_current(session.name.clone()) {
-                            sender.output(EnhancementsAppMsg::Toast {
-                                title: tr!("game-session-set-current-failed"),
-                                description: Some(err.to_string())
-                            }).unwrap();
+                            sender
+                                .output(EnhancementsAppMsg::Toast {
+                                    title: tr!("game-session-set-current-failed"),
+                                    description: Some(err.to_string()),
+                                })
+                                .unwrap();
 
                             // Prevent session applying
                             return;
                         }
 
-                        if let Err(err) = Sessions::apply(session.name.clone(), config.get_wine_prefix_path()) {
-                            sender.output(EnhancementsAppMsg::Toast {
-                                title: tr!("game-session-apply-failed"),
-                                description: Some(err.to_string())
-                            }).unwrap();
+                        if let Err(err) =
+                            Sessions::apply(session.name.clone(), config.get_wine_prefix_path())
+                        {
+                            sender
+                                .output(EnhancementsAppMsg::Toast {
+                                    title: tr!("game-session-apply-failed"),
+                                    description: Some(err.to_string()),
+                                })
+                                .unwrap();
 
                             // Prevent session activation
                             return;

@@ -1,5 +1,5 @@
-use relm4::prelude::*;
 use relm4::factory::*;
+use relm4::prelude::*;
 
 use adw::prelude::*;
 
@@ -10,7 +10,7 @@ use super::EnhancementsAppMsg;
 #[derive(Debug)]
 struct Variable {
     key: String,
-    value: String
+    value: String,
 }
 
 #[relm4::factory(async)]
@@ -46,7 +46,7 @@ impl AsyncFactoryComponent for Variable {
     ) -> Self {
         Self {
             key: init.0,
-            value: init.1
+            value: init.1,
         }
     }
 }
@@ -55,13 +55,13 @@ pub struct EnvironmentPage {
     variables: AsyncFactoryVecDeque<Variable>,
 
     name_entry: adw::EntryRow,
-    value_entry: adw::EntryRow
+    value_entry: adw::EntryRow,
 }
 
 #[derive(Debug, Clone)]
 pub enum EnvironmentPageMsg {
     Add,
-    Remove(DynamicIndex)
+    Remove(DynamicIndex),
 }
 
 #[relm4::component(async, pub)]
@@ -146,7 +146,11 @@ impl SimpleAsyncComponent for EnvironmentPage {
         }
     }
 
-    async fn init(_init: Self::Init, root: Self::Root, sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
+    async fn init(
+        _init: Self::Init,
+        root: Self::Root,
+        sender: AsyncComponentSender<Self>,
+    ) -> AsyncComponentParts<Self> {
         tracing::info!("Initializing environment settings");
 
         let mut model = Self {
@@ -155,11 +159,14 @@ impl SimpleAsyncComponent for EnvironmentPage {
                 .forward(sender.input_sender(), std::convert::identity),
 
             name_entry: adw::EntryRow::new(),
-            value_entry: adw::EntryRow::new()
+            value_entry: adw::EntryRow::new(),
         };
 
         for (name, value) in &CONFIG.game.environment {
-            model.variables.guard().push_back((name.trim().to_string(), value.trim().to_string()));
+            model
+                .variables
+                .guard()
+                .push_back((name.trim().to_string(), value.trim().to_string()));
         }
 
         let variables = model.variables.widget();

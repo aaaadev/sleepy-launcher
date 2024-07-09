@@ -1,5 +1,5 @@
-use relm4::prelude::*;
 use adw::prelude::*;
+use relm4::prelude::*;
 
 use anime_launcher_sdk::is_available;
 
@@ -11,13 +11,14 @@ pub struct DependenciesApp {
     show_arch: bool,
     show_debian: bool,
     show_fedora: bool,
-    show_list: bool
+    show_macos: bool,
+    show_list: bool,
 }
 
 #[derive(Debug, Clone)]
 pub enum DependenciesAppMsg {
     Continue,
-    Exit
+    Exit,
 }
 
 #[relm4::component(async, pub)]
@@ -41,7 +42,7 @@ impl SimpleAsyncComponent for DependenciesApp {
 
                 gtk::Label {
                     set_label: &tr!("missing-dependencies-message"),
-    
+
                     set_justify: gtk::Justification::Center,
                     set_wrap: true,
                     set_margin_top: 32
@@ -112,6 +113,23 @@ impl SimpleAsyncComponent for DependenciesApp {
                         set_spacing: 16,
 
                         #[watch]
+                        set_visible: model.show_macos,
+
+                        gtk::Label {
+                            set_label: "macOS (Homebrew)"
+                        },
+
+                        gtk::Entry {
+                            set_text: "brew install git p7zip webp librsvg",
+                            set_editable: false
+                        }
+                    },
+
+                    gtk::Box {
+                        set_orientation: gtk::Orientation::Vertical,
+                        set_spacing: 16,
+
+                        #[watch]
                         set_visible: model.show_list,
 
                         adw::PreferencesGroup {
@@ -125,6 +143,10 @@ impl SimpleAsyncComponent for DependenciesApp {
 
                             adw::ActionRow {
                                 set_title: "libwebp"
+                            },
+
+                            adw::ActionRow {
+                                set_title: "librsvg"
                             }
                         }
                     }
@@ -134,7 +156,7 @@ impl SimpleAsyncComponent for DependenciesApp {
             add = &adw::PreferencesGroup {
                 set_valign: gtk::Align::Center,
                 set_vexpand: true,
-    
+
                 gtk::Box {
                     set_orientation: gtk::Orientation::Horizontal,
                     set_halign: gtk::Align::Center,
@@ -158,26 +180,32 @@ impl SimpleAsyncComponent for DependenciesApp {
         }
     }
 
-    async fn init(_init: Self::Init, root: Self::Root, _sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
+    async fn init(
+        _init: Self::Init,
+        root: Self::Root,
+        _sender: AsyncComponentSender<Self>,
+    ) -> AsyncComponentParts<Self> {
         let distro = whatadistro::identify();
 
         let mut model = Self {
             show_arch: match &distro {
                 Some(distro) => distro.is_similar("arch"),
-                None => false
+                None => false,
             },
 
             show_debian: match &distro {
                 Some(distro) => distro.is_similar("debian"),
-                None => false
+                None => false,
             },
 
             show_fedora: match &distro {
                 Some(distro) => distro.is_similar("fedora"),
-                None => false
+                None => false,
             },
 
-            show_list: false
+            show_macos: true,
+
+            show_list: false,
         };
 
         model.show_list = !model.show_arch && !model.show_debian && !model.show_fedora;
@@ -196,10 +224,8 @@ impl SimpleAsyncComponent for DependenciesApp {
                 for package in packages {
                     if !is_available(package) {
                         sender.output(Self::Output::Toast {
-                            title: tr!("package-not-available", {
-                                "package" = package
-                            }),
-                            description: None
+                            title: tr!("package-not-available", { "package" = package }),
+                            description: None,
                         });
 
                         return;
@@ -209,10 +235,8 @@ impl SimpleAsyncComponent for DependenciesApp {
                 // 7z sometimes has different binaries
                 if !is_available("7z") && !is_available("7za") {
                     sender.output(Self::Output::Toast {
-                        title: tr!("package-not-available", {
-                            "package" = "7z"
-                        }),
-                        description: None
+                        title: tr!("package-not-available", { "package" = "7z" }),
+                        description: None,
                     });
 
                     return;
@@ -221,7 +245,7 @@ impl SimpleAsyncComponent for DependenciesApp {
                 sender.output(Self::Output::ScrollToDefaultPaths);
             }
 
-            DependenciesAppMsg::Exit => relm4::main_application().quit()
+            DependenciesAppMsg::Exit => relm4::main_application().quit(),
         }
     }
 }

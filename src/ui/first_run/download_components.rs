@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
-use relm4::prelude::*;
 use adw::prelude::*;
+use relm4::prelude::*;
 
 use anime_launcher_sdk::anime_game_core::prelude::*;
 use anime_launcher_sdk::wincompatlib::prelude::*;
 
-use anime_launcher_sdk::components::*;
 use anime_launcher_sdk::components::wine::UnifiedWine;
+use anime_launcher_sdk::components::*;
 
 use anime_launcher_sdk::config::ConfigExt;
 use anime_launcher_sdk::zzz::config::Config;
@@ -56,7 +56,7 @@ pub struct DownloadComponentsApp {
     /// `Some(true)` - done
     applying_dxvk: Option<bool>,
 
-    downloading: bool
+    downloading: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -67,7 +67,7 @@ pub enum DownloadComponentsAppMsg {
     DownloadDXVK,
     ApplyDXVK,
     Continue,
-    Exit
+    Exit,
 }
 
 #[relm4::component(async, pub)]
@@ -264,14 +264,18 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
         }
     }
 
-    async fn init(_init: Self::Init, root: Self::Root, sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
+    async fn init(
+        _init: Self::Init,
+        root: Self::Root,
+        sender: AsyncComponentSender<Self>,
+    ) -> AsyncComponentParts<Self> {
         let model = Self {
             progress_bar: ProgressBar::builder()
                 .launch(ProgressBarInit {
                     caption: None,
                     display_progress: true,
                     display_fraction: true,
-                    visible: true
+                    visible: true,
                 })
                 .detach(),
 
@@ -295,7 +299,7 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
 
             applying_dxvk: None,
 
-            downloading: false
+            downloading: false,
         };
 
         model.progress_bar.widget().set_width_request(360);
@@ -314,14 +318,16 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
                 let config = Config::get().unwrap_or_else(|_| CONFIG.clone());
 
                 // 4 latest versions of 4 first available wine group
-                self.wine_versions = wine::get_groups(&config.components.path).unwrap()
+                self.wine_versions = wine::get_groups(&config.components.path)
+                    .unwrap()
                     .into_iter()
                     .take(4)
                     .flat_map(|group| group.versions.into_iter().take(4))
                     .collect();
 
                 // 4 latest versions of 4 first available dxvk group
-                self.dxvk_versions = dxvk::get_groups(&config.components.path).unwrap()
+                self.dxvk_versions = dxvk::get_groups(&config.components.path)
+                    .unwrap()
                     .into_iter()
                     .take(4)
                     .flat_map(|group| group.versions.into_iter().take(4))
@@ -332,12 +338,14 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
             DownloadComponentsAppMsg::DownloadWine => {
                 let config = Config::get().unwrap_or_else(|_| CONFIG.clone());
 
-                self.selected_wine = Some(self.wine_versions[self.wine_combo.selected() as usize].clone());
-                self.selected_dxvk = Some(self.dxvk_versions[self.dxvk_combo.selected() as usize].clone());
+                self.selected_wine =
+                    Some(self.wine_versions[self.wine_combo.selected() as usize].clone());
+                self.selected_dxvk =
+                    Some(self.dxvk_versions[self.dxvk_combo.selected() as usize].clone());
 
                 self.downloading_wine_version = self.selected_wine.clone().unwrap().title;
                 self.downloading_dxvk_version = self.selected_dxvk.clone().unwrap().name;
-                self.creating_prefix_path     = config.game.wine.prefix.to_string_lossy().to_string();
+                self.creating_prefix_path = config.game.wine.prefix.to_string_lossy().to_string();
 
                 self.downloading = true;
                 self.downloading_wine = Some(false);
@@ -358,13 +366,12 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
 
                         sender.output(Self::Output::Toast {
                             title: tr!("config-update-error"),
-                            description: Some(err.to_string())
+                            description: Some(err.to_string()),
                         });
                     }
 
                     sender.input(DownloadComponentsAppMsg::CreatePrefix);
                 }
-
                 // Otherwise download wine
                 else {
                     std::thread::spawn(move || {
@@ -386,7 +393,7 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
 
                                             sender.output(Self::Output::Toast {
                                                 title: tr!("wine-download-error"),
-                                                description: Some(err.to_string())
+                                                description: Some(err.to_string()),
                                             });
                                         }
 
@@ -395,13 +402,14 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
 
                                             sender.output(Self::Output::Toast {
                                                 title: tr!("wine-unpack-errror"),
-                                                description: Some(err.clone())
+                                                description: Some(err.clone()),
                                             });
                                         }
 
                                         // Create prefix
                                         InstallerUpdate::UnpackingFinished => {
-                                            let mut config = Config::get().unwrap_or_else(|_| CONFIG.clone());
+                                            let mut config =
+                                                Config::get().unwrap_or_else(|_| CONFIG.clone());
 
                                             config.game.wine.selected = Some(wine.name.clone());
 
@@ -410,17 +418,19 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
 
                                                 sender.output(Self::Output::Toast {
                                                     title: tr!("config-update-error"),
-                                                    description: Some(err.to_string())
+                                                    description: Some(err.to_string()),
                                                 });
                                             }
 
                                             sender.input(DownloadComponentsAppMsg::CreatePrefix);
-                                        },
+                                        }
 
-                                        _ => ()
+                                        _ => (),
                                     }
 
-                                    progress_bar_input.send(ProgressBarMsg::UpdateFromState(DiffUpdate::InstallerUpdate(update)));
+                                    progress_bar_input.send(ProgressBarMsg::UpdateFromState(
+                                        DiffUpdate::InstallerUpdate(update),
+                                    ));
                                 });
                             }
 
@@ -429,7 +439,7 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
 
                                 sender.output(Self::Output::Toast {
                                     title: tr!("wine-install-failed"),
-                                    description: Some(err.to_string())
+                                    description: Some(err.to_string()),
                                 });
                             }
                         }
@@ -438,7 +448,6 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
             }
 
             // TODO: perhaps I could re-use main/create_prefix.rs here?
-
             #[allow(unused_must_use)]
             DownloadComponentsAppMsg::CreatePrefix => {
                 self.downloading_wine = Some(true);
@@ -451,7 +460,10 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
                 let wine = self.selected_wine.as_ref().unwrap();
 
                 let wine = wine
-                    .to_wine(config.components.path, Some(config.game.wine.builds.join(&wine.name)))
+                    .to_wine(
+                        config.components.path,
+                        Some(config.game.wine.builds.join(&wine.name)),
+                    )
                     .with_prefix(&config.game.wine.prefix)
                     .with_loader(WineLoader::Current)
                     .with_arch(WineArch::Win64);
@@ -466,7 +478,7 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
 
                             sender.output(Self::Output::Toast {
                                 title: tr!("wine-prefix-update-failed"),
-                                description: Some(err.to_string())
+                                description: Some(err.to_string()),
                             });
                         }
                     }
@@ -487,9 +499,7 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
                     tracing::info!("DXVK is already downloaded: {}", dxvk.name);
 
                     sender.input(DownloadComponentsAppMsg::ApplyDXVK);
-                }
-
-                else {
+                } else {
                     std::thread::spawn(move || {
                         // Install DXVK
                         tracing::info!("Installing DXVK: {}", dxvk.name);
@@ -512,16 +522,16 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
 
                                             sender.output(Self::Output::Toast {
                                                 title: tr!("dxvk-download-error"),
-                                                description: Some(err.to_string())
+                                                description: Some(err.to_string()),
                                             });
                                         }
 
                                         InstallerUpdate::UnpackingError(err) => {
                                             tracing::error!("Failed to unpack dxvk: {err}");
-    
+
                                             sender.output(Self::Output::Toast {
                                                 title: tr!("dxvk-unpack-error"),
-                                                description: Some(err.clone())
+                                                description: Some(err.clone()),
                                             });
                                         }
 
@@ -530,10 +540,12 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
                                             sender.input(DownloadComponentsAppMsg::ApplyDXVK);
                                         }
 
-                                        _ => ()
+                                        _ => (),
                                     }
 
-                                    progress_bar_input.send(ProgressBarMsg::UpdateFromState(DiffUpdate::InstallerUpdate(update)));
+                                    progress_bar_input.send(ProgressBarMsg::UpdateFromState(
+                                        DiffUpdate::InstallerUpdate(update),
+                                    ));
                                 });
                             }
 
@@ -542,7 +554,7 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
 
                                 sender.output(Self::Output::Toast {
                                     title: tr!("dxvk-install-failed"),
-                                    description: Some(err.to_string())
+                                    description: Some(err.to_string()),
                                 });
                             }
                         }
@@ -567,7 +579,10 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
                 // Apply DXVK if we need it
                 if wine.features_in(&group).unwrap_or_default().need_dxvk {
                     let wine = wine
-                        .to_wine(config.components.path, Some(config.game.wine.builds.join(&wine.name)))
+                        .to_wine(
+                            config.components.path,
+                            Some(config.game.wine.builds.join(&wine.name)),
+                        )
                         .with_loader(WineLoader::Current)
                         .with_arch(WineArch::Win64)
                         .with_prefix(config.game.wine.prefix);
@@ -595,13 +610,12 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
 
                                 sender.output(Self::Output::Toast {
                                     title: tr!("dxvk-apply-error"),
-                                    description: Some(err.to_string())
+                                    description: Some(err.to_string()),
                                 });
                             }
                         }
                     });
                 }
-
                 // Skip DXVK applying if we don't need it
                 else {
                     tracing::info!("Selected wine version has `need_dxvk = false` feature. Skipping DXVK applying...");
@@ -617,7 +631,7 @@ impl SimpleAsyncComponent for DownloadComponentsApp {
                 sender.output(Self::Output::ScrollToFinish);
             }
 
-            DownloadComponentsAppMsg::Exit => relm4::main_application().quit()
+            DownloadComponentsAppMsg::Exit => relm4::main_application().quit(),
         }
     }
 }

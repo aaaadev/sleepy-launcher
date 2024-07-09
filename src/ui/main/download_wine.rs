@@ -1,14 +1,11 @@
-use relm4::{
-    prelude::*,
-    Sender
-};
+use relm4::{prelude::*, Sender};
 
 use gtk::glib::clone;
 
 use anime_launcher_sdk::components::wine;
 
-use crate::*;
 use crate::ui::components::*;
+use crate::*;
 
 use super::{App, AppMsg};
 
@@ -25,22 +22,23 @@ pub fn download_wine(sender: ComponentSender<App>, progress_bar_input: Sender<Pr
 
                 sender.input(AppMsg::UpdateLauncherState {
                     perform_on_download_needed: false,
-                    show_status_page: true
+                    show_status_page: true,
                 });
             }
-
             // Or download new one if none is available
             else {
-                let latest = wine::Version::latest(&CONFIG.components.path).expect("Failed to get latest wine version");
+                let latest = wine::Version::latest(&CONFIG.components.path)
+                    .expect("Failed to get latest wine version");
 
                 // Choose selected wine version or use latest available one
                 let wine = match &config.game.wine.selected {
-                    Some(version) => match wine::Version::find_in(&config.components.path, version) {
+                    Some(version) => match wine::Version::find_in(&config.components.path, version)
+                    {
                         Ok(Some(version)) => version,
-                        _ => latest
-                    }
+                        _ => latest,
+                    },
 
-                    None => latest
+                    None => latest,
                 };
 
                 // Download wine version
@@ -95,15 +93,15 @@ pub fn download_wine(sender: ComponentSender<App>, progress_bar_input: Sender<Pr
 
                     Err(err) => sender.input(AppMsg::Toast {
                         title: tr!("wine-install-failed"),
-                        description: Some(err.to_string())
-                    })
+                        description: Some(err.to_string()),
+                    }),
                 }
             }
         }
 
         Err(err) => sender.input(AppMsg::Toast {
             title: tr!("downloaded-wine-list-failed"),
-            description: Some(err.to_string())
-        })
+            description: Some(err.to_string()),
+        }),
     }
 }

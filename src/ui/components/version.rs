@@ -2,8 +2,8 @@ use std::path::PathBuf;
 
 use relm4::prelude::*;
 
-use gtk::prelude::*;
 use adw::prelude::*;
+use gtk::prelude::*;
 
 use gtk::glib::clone;
 
@@ -13,14 +13,14 @@ use anime_launcher_sdk::anime_game_core::zzz::prelude::*;
 use anime_launcher_sdk::config::ConfigExt;
 use anime_launcher_sdk::zzz::config::Config;
 
-use super::ComponentGroupMsg;
 use super::progress_bar::ProgressBarMsg;
+use super::ComponentGroupMsg;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VersionState {
     Downloaded,
     Downloading,
-    NotDownloaded
+    NotDownloaded,
 }
 
 pub struct ComponentVersion {
@@ -35,14 +35,14 @@ pub struct ComponentVersion {
     pub show_recommended_only: bool,
     pub state: VersionState,
 
-    pub progress_bar: AsyncController<super::ProgressBar>
+    pub progress_bar: AsyncController<super::ProgressBar>,
 }
 
 #[derive(Debug)]
 pub enum ComponentVersionMsg {
     ShowRecommendedOnly(bool),
     PerformAction,
-    SetState(VersionState)
+    SetState(VersionState),
 }
 
 #[relm4::component(async, pub)]
@@ -90,7 +90,10 @@ impl SimpleAsyncComponent for ComponentVersion {
 
             download_uri: init.0.uri,
             download_folder: init.1,
-            download_filename: init.0.format.map(|format| format!("{}.{format}", init.0.name)),
+            download_filename: init
+                .0
+                .format
+                .map(|format| format!("{}.{format}", init.0.name)),
 
             show_recommended_only: true,
             state: VersionState::NotDownloaded,
@@ -102,7 +105,7 @@ impl SimpleAsyncComponent for ComponentVersion {
                     display_fraction: false,
                     visible: false,
                 })
-                .detach()
+                .detach(),
         };
 
         // Set default component state
@@ -141,7 +144,8 @@ impl SimpleAsyncComponent for ComponentVersion {
 
                         self.state = VersionState::NotDownloaded;
 
-                        #[allow(unused_must_use)] {
+                        #[allow(unused_must_use)]
+                        {
                             sender.output(ComponentGroupMsg::CallOnDeleted);
                         }
                     }
@@ -151,7 +155,9 @@ impl SimpleAsyncComponent for ComponentVersion {
                             // todo
                             let mut installer = Installer::new(&self.download_uri)
                                 .expect("Failed to create installer instance for this version")
-                                .with_temp_folder(config.launcher.temp.unwrap_or_else(std::env::temp_dir));
+                                .with_temp_folder(
+                                    config.launcher.temp.unwrap_or_else(std::env::temp_dir),
+                                );
 
                             if let Some(filename) = &self.download_filename {
                                 installer = installer.with_filename(filename.to_owned());
@@ -162,41 +168,43 @@ impl SimpleAsyncComponent for ComponentVersion {
                             let progress_bar_sender = self.progress_bar.sender().clone();
 
                             #[allow(unused_must_use)]
-                            std::thread::spawn(clone!(@strong self.download_folder as download_folder => move || {
-                                progress_bar_sender.send(ProgressBarMsg::Reset);
-                                progress_bar_sender.send(ProgressBarMsg::SetVisible(true));
+                            std::thread::spawn(
+                                clone!(@strong self.download_folder as download_folder => move || {
+                                    progress_bar_sender.send(ProgressBarMsg::Reset);
+                                    progress_bar_sender.send(ProgressBarMsg::SetVisible(true));
 
-                                installer.install(download_folder, move |state| {
-                                    match &state {
-                                        InstallerUpdate::UnpackingFinished |
-                                        InstallerUpdate::DownloadingError(_) |
-                                        InstallerUpdate::UnpackingError(_) => {
-                                            progress_bar_sender.send(ProgressBarMsg::SetVisible(false));
+                                    installer.install(download_folder, move |state| {
+                                        match &state {
+                                            InstallerUpdate::UnpackingFinished |
+                                            InstallerUpdate::DownloadingError(_) |
+                                            InstallerUpdate::UnpackingError(_) => {
+                                                progress_bar_sender.send(ProgressBarMsg::SetVisible(false));
 
-                                            if let InstallerUpdate::UnpackingFinished = &state {
-                                                sender.input(ComponentVersionMsg::SetState(VersionState::Downloaded));
-                                                sender.output(ComponentGroupMsg::CallOnDownloaded);
-                                            }
+                                                if let InstallerUpdate::UnpackingFinished = &state {
+                                                    sender.input(ComponentVersionMsg::SetState(VersionState::Downloaded));
+                                                    sender.output(ComponentGroupMsg::CallOnDownloaded);
+                                                }
 
-                                            else {
-                                                sender.input(ComponentVersionMsg::SetState(VersionState::NotDownloaded));
-                                            }
-                                        },
+                                                else {
+                                                    sender.input(ComponentVersionMsg::SetState(VersionState::NotDownloaded));
+                                                }
+                                            },
 
-                                        _ => ()
-                                    }
+                                            _ => ()
+                                        }
 
-                                    progress_bar_sender.send(ProgressBarMsg::UpdateFromState(DiffUpdate::InstallerUpdate(state)));
-                                });
-                            }));
+                                        progress_bar_sender.send(ProgressBarMsg::UpdateFromState(DiffUpdate::InstallerUpdate(state)));
+                                    });
+                                }),
+                            );
                         }
                     }
 
-                    _ => ()
+                    _ => (),
                 }
             }
 
-            ComponentVersionMsg::SetState(state) => self.state = state
+            ComponentVersionMsg::SetState(state) => self.state = state,
         }
     }
 }

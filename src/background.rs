@@ -3,23 +3,34 @@ use std::process::Command;
 use anime_launcher_sdk::anime_game_core::installer::downloader::Downloader;
 use anime_launcher_sdk::anime_game_core::minreq;
 
-use md5::{Md5, Digest};
+use md5::{Digest, Md5};
 
 #[derive(Debug, Clone)]
 pub struct Background {
     pub uri: String,
-    pub hash: String
+    pub hash: String,
 }
 
 pub fn get_uri() -> String {
     let lang = crate::i18n::get_lang();
 
     if lang.language == unic_langid::langid!("zh-cn").language {
-        concat!("https://hyp-api.", "mi", "ho", "yo", ".com/hyp/hyp-connect/api/getAllGameBasicInfo?launcher_id=jGHBHlcOq1").to_owned()
-    }
-
-    else {
-        let uri = concat!("https://sg-hyp-api.", "ho", "yo", "verse", ".com/hyp/hyp-connect/api/getAllGameBasicInfo?launcher_id=VYTpXlbWo8&language=");
+        concat!(
+            "https://hyp-api.",
+            "mi",
+            "ho",
+            "yo",
+            ".com/hyp/hyp-connect/api/getAllGameBasicInfo?launcher_id=jGHBHlcOq1"
+        )
+        .to_owned()
+    } else {
+        let uri = concat!(
+            "https://sg-hyp-api.",
+            "ho",
+            "yo",
+            "verse",
+            ".com/hyp/hyp-connect/api/getAllGameBasicInfo?launcher_id=VYTpXlbWo8&language="
+        );
 
         uri.to_owned() + &crate::i18n::format_lang(&lang)
     }
@@ -27,25 +38,27 @@ pub fn get_uri() -> String {
 
 #[cached::proc_macro::cached(result)]
 pub fn get_background_info() -> anyhow::Result<Background> {
-    let json = serde_json::from_slice::<serde_json::Value>(minreq::get(get_uri()).send()?.as_bytes())?;
+    let json =
+        serde_json::from_slice::<serde_json::Value>(minreq::get(get_uri()).send()?.as_bytes())?;
 
-    let uri = json["data"]["game_info_list"].as_array()
+    let uri = json["data"]["game_info_list"]
+        .as_array()
         .ok_or_else(|| anyhow::anyhow!("Failed to list games in the backgrounds API"))?
         .iter()
-        .find(|game| {
-            match game["game"]["biz"].as_str() {
-                Some(biz) => biz.starts_with("nap_"),
-                _ => false
-            }
+        .find(|game| match game["game"]["biz"].as_str() {
+            Some(biz) => biz.starts_with("nap_"),
+            _ => false,
         })
-        .ok_or_else(|| anyhow::anyhow!("Failed to find the game in the backgrounds API"))?["backgrounds"]
+        .ok_or_else(|| anyhow::anyhow!("Failed to find the game in the backgrounds API"))?
+        ["backgrounds"]
         .as_array()
         .and_then(|backgrounds| backgrounds.iter().next())
         .and_then(|background| background["background"]["url"].as_str())
         .ok_or_else(|| anyhow::anyhow!("Failed to get background picture url"))?
         .to_string();
 
-    let hash = uri.split('/')
+    let hash = uri
+        .split('/')
         .last()
         .unwrap_or_default()
         .split('_')
@@ -53,10 +66,7 @@ pub fn get_background_info() -> anyhow::Result<Background> {
         .unwrap_or_default()
         .to_owned();
 
-    Ok(Background {
-        uri,
-        hash
-    })
+    Ok(Background { uri, hash })
 }
 
 pub fn download_background() -> anyhow::Result<()> {
@@ -98,6 +108,7 @@ pub fn download_background() -> anyhow::Result<()> {
             .arg(crate::BACKGROUND_FILE.as_path())
             .arg("-o")
             .arg(crate::BACKGROUND_PRIMARY_FILE.as_path())
+            .env("PATH", format!("{}:/opt/homebrew/bin", env!("PATH")))
             .spawn()?
             .wait()?;
 
@@ -105,12 +116,16 @@ pub fn download_background() -> anyhow::Result<()> {
         // Will happen with HSR because devs apparently named
         // their background image ".webp" while it's JPEG
         if !crate::BACKGROUND_PRIMARY_FILE.exists() {
-            std::fs::copy(crate::BACKGROUND_FILE.as_path(), crate::BACKGROUND_PRIMARY_FILE.as_path())?;
+            std::fs::copy(
+                crate::BACKGROUND_FILE.as_path(),
+                crate::BACKGROUND_PRIMARY_FILE.as_path(),
+            )?;
         }
-    }
-
-    else {
-        std::fs::copy(crate::BACKGROUND_FILE.as_path(), crate::BACKGROUND_PRIMARY_FILE.as_path())?;
+    } else {
+        std::fs::copy(
+            crate::BACKGROUND_FILE.as_path(),
+            crate::BACKGROUND_PRIMARY_FILE.as_path(),
+        )?;
     }
 
     Ok(())

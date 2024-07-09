@@ -2,12 +2,27 @@
 name = "sleepy-launcher"
 version = "1.0.1"
 description = "Sleepy launcher"
-authors = ["Nikita Podvirnyy <krypt0nn@vk.com>"]
-homepage = "https://github.com/an-anime-team/sleepy-launcher"
-repository = "https://github.com/an-anime-team/sleepy-launcher"
+authors = ["Nikita Podvirnyy <krypt0nn@vk.com>", "Yeri Kim <astar@astar.moe>"]
+homepage = "https://github.com/aaaadev/sleepy-launcher"
+repository = "https://github.com/aaaadev/sleepy-launcher"
 license = "GPL-3.0"
 edition = "2021"
 build = "build.rs"
+
+[package.metadata.bundle]
+name = "Sleepy Launcher"
+identifier = "moe.launcher.sleepy-launcher"
+icon = ["assets/images/icon.png"]
+version = "1.0.1"
+resources = []
+copyright = "Copyright (c) An anime team 2024. All rights reserved."
+category = "public.app-category.games"
+short_description = "Sleepy launcher"
+long_description = """
+Too sleepy Zzz
+"""
+osx_frameworks = []
+osx_url_schemes = ["moe.launcher.sleepy-launcher"]
 
 [profile.release]
 strip = true
@@ -18,8 +33,7 @@ opt-level = "s"
 glib-build-tools = "0.19"
 
 [dependencies.anime-launcher-sdk]
-git = "https://github.com/an-anime-team/anime-launcher-sdk"
-tag = "1.16.3"
+git = "https://github.com/aaaadev/anime-launcher-sdk"
 features = ["all", "zzz"]
 
 # path = "../anime-launcher-sdk" # ! for dev purposes only
@@ -47,3 +61,5 @@ fluent-templates = "0.9"
 unic-langid = "0.9"
 
 human-panic = "2.0.0"
+
+privilege = "0.3"

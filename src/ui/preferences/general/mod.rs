@@ -1,13 +1,13 @@
 use relm4::prelude::*;
 
-use gtk::prelude::*;
 use adw::prelude::*;
+use gtk::prelude::*;
 
 use anime_launcher_sdk::wincompatlib::prelude::*;
 
 use anime_launcher_sdk::config::ConfigExt;
-use anime_launcher_sdk::zzz::config::Config;
 use anime_launcher_sdk::zzz::config::schema::prelude::*;
+use anime_launcher_sdk::zzz::config::Config;
 
 use anime_launcher_sdk::anime_game_core::zzz::consts::GameEdition;
 use anime_launcher_sdk::zzz::env_emulation::Environment;
@@ -16,8 +16,8 @@ pub mod components;
 
 use components::*;
 
-use crate::ui::migrate_installation::MigrateInstallationApp;
 use crate::i18n::*;
+use crate::ui::migrate_installation::MigrateInstallationApp;
 use crate::*;
 
 use super::main::PreferencesAppMsg;
@@ -28,7 +28,7 @@ pub struct GeneralApp {
 
     game_diff: Option<VersionDiff>,
     style: LauncherStyle,
-    languages: Vec<String>
+    languages: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -52,8 +52,8 @@ pub enum GeneralAppMsg {
 
     Toast {
         title: String,
-        description: Option<String>
-    }
+        description: Option<String>,
+    },
 }
 
 #[relm4::component(async, pub)]
@@ -178,7 +178,7 @@ impl SimpleAsyncComponent for GeneralApp {
                                 config.launcher.language = crate::i18n::format_lang(SUPPORTED_LANGUAGES
                                     .get(row.selected() as usize)
                                     .unwrap_or(&SUPPORTED_LANGUAGES[0]));
-    
+
                                 Config::update(config);
                             }
                         }
@@ -236,7 +236,7 @@ impl SimpleAsyncComponent for GeneralApp {
 
                                     _ => unreachable!()
                                 };
-    
+
                                 Config::update(config);
                             }
                         }
@@ -446,9 +446,7 @@ impl SimpleAsyncComponent for GeneralApp {
         tracing::info!("Initializing general settings");
 
         let model = Self {
-            migrate_installation: MigrateInstallationApp::builder()
-                .launch(())
-                .detach(),
+            migrate_installation: MigrateInstallationApp::builder().launch(()).detach(),
 
             components_page: ComponentsPage::builder()
                 .launch(())
@@ -456,7 +454,10 @@ impl SimpleAsyncComponent for GeneralApp {
 
             game_diff: None,
             style: CONFIG.launcher.style,
-            languages: SUPPORTED_LANGUAGES.iter().map(|lang| tr!(format_lang(lang).as_str())).collect()
+            languages: SUPPORTED_LANGUAGES
+                .iter()
+                .map(|lang| tr!(format_lang(lang).as_str()))
+                .collect(),
         };
 
         let components_page = model.components_page.widget();
@@ -475,42 +476,48 @@ impl SimpleAsyncComponent for GeneralApp {
             }
 
             GeneralAppMsg::UpdateDownloadedWine => {
-                self.components_page.sender()
+                self.components_page
+                    .sender()
                     .send(ComponentsPageMsg::UpdateDownloadedWine)
                     .unwrap();
             }
 
             GeneralAppMsg::UpdateDownloadedDxvk => {
-                self.components_page.sender()
+                self.components_page
+                    .sender()
                     .send(ComponentsPageMsg::UpdateDownloadedDxvk)
                     .unwrap();
             }
 
             GeneralAppMsg::OpenMigrateInstallation => unsafe {
                 if let Some(window) = crate::ui::main::PREFERENCES_WINDOW.as_ref() {
-                    self.migrate_installation.widget().set_transient_for(Some(window.widget()));
+                    self.migrate_installation
+                        .widget()
+                        .set_transient_for(Some(window.widget()));
                 }
 
                 self.migrate_installation.widget().present();
-            }
+            },
 
             GeneralAppMsg::RepairGame => {
                 sender.output(Self::Output::RepairGame).unwrap();
             }
 
             GeneralAppMsg::OpenMainPage => unsafe {
-                PREFERENCES_WINDOW.as_ref()
+                PREFERENCES_WINDOW
+                    .as_ref()
                     .unwrap_unchecked()
                     .widget()
                     .pop_subpage();
-            }
+            },
 
             GeneralAppMsg::OpenComponentsPage => unsafe {
-                PREFERENCES_WINDOW.as_ref()
+                PREFERENCES_WINDOW
+                    .as_ref()
                     .unwrap_unchecked()
                     .widget()
                     .push_subpage(self.components_page.widget());
-            }
+            },
 
             #[allow(unused_must_use)]
             GeneralAppMsg::UpdateLauncherStyle(style) => {
@@ -520,7 +527,7 @@ impl SimpleAsyncComponent for GeneralApp {
 
                         sender.input(GeneralAppMsg::Toast {
                             title: tr!("background-downloading-failed"),
-                            description: Some(err.to_string())
+                            description: Some(err.to_string()),
                         });
 
                         return;
@@ -543,7 +550,10 @@ impl SimpleAsyncComponent for GeneralApp {
 
                 if let Ok(Some(wine)) = config.get_selected_wine() {
                     let result = wine
-                        .to_wine(config.components.path, Some(config.game.wine.builds.join(&wine.name)))
+                        .to_wine(
+                            config.components.path,
+                            Some(config.game.wine.builds.join(&wine.name)),
+                        )
                         .with_prefix(config.game.wine.prefix)
                         .with_loader(WineLoader::Current)
                         .with_arch(WineArch::Win64)
@@ -551,10 +561,8 @@ impl SimpleAsyncComponent for GeneralApp {
 
                     if let Err(err) = result {
                         sender.input(GeneralAppMsg::Toast {
-                            title: tr!("wine-run-error", {
-                                "executable" = executable.join(" ")
-                            }),
-                            description: Some(err.to_string())
+                            title: tr!("wine-run-error", { "executable" = executable.join(" ") }),
+                            description: Some(err.to_string()),
                         });
 
                         tracing::error!("Failed to run {:?} using wine: {err}", executable);

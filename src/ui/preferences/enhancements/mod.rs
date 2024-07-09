@@ -1,16 +1,12 @@
 use relm4::prelude::*;
 
-use relm4::factory::{
-    AsyncFactoryComponent,
-    AsyncFactorySender,
-    AsyncFactoryVecDeque
-};
+use relm4::factory::{AsyncFactoryComponent, AsyncFactorySender, AsyncFactoryVecDeque};
 
 use adw::prelude::*;
 
+use anime_launcher_sdk::config::schema_blanks::prelude::*;
 use anime_launcher_sdk::config::ConfigExt;
 use anime_launcher_sdk::zzz::config::Config;
-use anime_launcher_sdk::config::schema_blanks::prelude::*;
 
 use anime_launcher_sdk::anime_game_core::installer::downloader::Downloader;
 
@@ -19,13 +15,13 @@ use anime_launcher_sdk::is_available;
 
 use enum_ordinalize::Ordinalize;
 
+pub mod environment;
 pub mod game;
 pub mod sandbox;
-pub mod environment;
 
+use environment::*;
 use game::*;
 use sandbox::*;
-use environment::*;
 
 use crate::*;
 
@@ -37,7 +33,7 @@ struct DiscordRpcIcon {
     pub check_button: gtk::CheckButton,
 
     pub name: String,
-    pub path: PathBuf
+    pub path: PathBuf,
 }
 
 #[relm4::factory(async)]
@@ -93,7 +89,7 @@ pub struct EnhancementsApp {
     gamescope: AsyncController<GamescopeApp>,
     game_page: AsyncController<GamePage>,
     sandbox_page: AsyncController<SandboxPage>,
-    environment_page: AsyncController<EnvironmentPage>
+    environment_page: AsyncController<EnvironmentPage>,
 }
 
 #[derive(Debug)]
@@ -110,8 +106,8 @@ pub enum EnhancementsAppMsg {
 
     Toast {
         title: String,
-        description: Option<String>
-    }
+        description: Option<String>,
+    },
 }
 
 #[relm4::component(async, pub)]
@@ -180,7 +176,7 @@ impl SimpleAsyncComponent for EnhancementsApp {
                     set_model = &gtk::StringList::new(&[
                         &tr!("none"),
                         "ESync",
-                        "FSync"
+                        "MSync",
                     ]),
 
                     set_selected: CONFIG.game.wine.sync.ordinal() as u32,
@@ -571,9 +567,7 @@ impl SimpleAsyncComponent for EnhancementsApp {
 
             discord_rpc_root_check_button: gtk::CheckButton::new(),
 
-            gamescope: GamescopeApp::builder()
-                .launch(())
-                .detach(),
+            gamescope: GamescopeApp::builder().launch(()).detach(),
 
             game_page: GamePage::builder()
                 .launch(())
@@ -585,7 +579,7 @@ impl SimpleAsyncComponent for EnhancementsApp {
 
             environment_page: EnvironmentPage::builder()
                 .launch(())
-                .forward(sender.input_sender(), std::convert::identity)
+                .forward(sender.input_sender(), std::convert::identity),
         };
 
         match DiscordRpc::get_assets(CONFIG.launcher.discord_rpc.app_id) {
@@ -604,7 +598,8 @@ impl SimpleAsyncComponent for EnhancementsApp {
                     if old_path.exists() {
                         if let Ok(metadata) = old_path.metadata() {
                             if metadata.is_file() {
-                                std::fs::remove_file(old_path).expect("Failed to delete old discord rpc icon");
+                                std::fs::remove_file(old_path)
+                                    .expect("Failed to delete old discord rpc icon");
                             }
                         }
                     }
@@ -626,7 +621,6 @@ impl SimpleAsyncComponent for EnhancementsApp {
                             }*/
                         });
                     }
-
                     // TODO: add icons after thread above finishes its work as well
                     else {
                         let check_button = gtk::CheckButton::new();
@@ -641,7 +635,7 @@ impl SimpleAsyncComponent for EnhancementsApp {
                             check_button,
 
                             name: icon.name.clone(),
-                            path: cache_file.clone()
+                            path: cache_file.clone(),
                         });
                     }
                 }
@@ -649,8 +643,8 @@ impl SimpleAsyncComponent for EnhancementsApp {
 
             Err(err) => sender.input(EnhancementsAppMsg::Toast {
                 title: tr!("discord-rpc-icons-fetch-failed"),
-                description: Some(err.to_string())
-            })
+                description: Some(err.to_string()),
+            }),
         }
 
         let discord_rpc_icons = model.discord_rpc_icons.widget();
@@ -667,8 +661,10 @@ impl SimpleAsyncComponent for EnhancementsApp {
     async fn update(&mut self, msg: Self::Input, sender: AsyncComponentSender<Self>) {
         match msg {
             EnhancementsAppMsg::SetGamescopeParent => unsafe {
-                self.gamescope.widget().set_transient_for(super::main::PREFERENCES_WINDOW.as_ref());
-            }
+                self.gamescope
+                    .widget()
+                    .set_transient_for(super::main::PREFERENCES_WINDOW.as_ref());
+            },
 
             EnhancementsAppMsg::SetDiscordRpcIcon(index) => {
                 if let Some(icon) = self.discord_rpc_icons.guard().get(index.current_index()) {
@@ -687,38 +683,41 @@ impl SimpleAsyncComponent for EnhancementsApp {
             }
 
             EnhancementsAppMsg::OpenMainPage => unsafe {
-                PREFERENCES_WINDOW.as_ref()
+                PREFERENCES_WINDOW
+                    .as_ref()
                     .unwrap_unchecked()
                     .widget()
                     .pop_subpage();
-            }
+            },
 
             EnhancementsAppMsg::OpenGameSettingsPage => unsafe {
-                PREFERENCES_WINDOW.as_ref()
+                PREFERENCES_WINDOW
+                    .as_ref()
                     .unwrap_unchecked()
                     .widget()
                     .push_subpage(self.game_page.widget());
-            }
+            },
 
             EnhancementsAppMsg::OpenSandboxSettingsPage => unsafe {
-                PREFERENCES_WINDOW.as_ref()
+                PREFERENCES_WINDOW
+                    .as_ref()
                     .unwrap_unchecked()
                     .widget()
                     .push_subpage(self.sandbox_page.widget());
-            }
+            },
 
             EnhancementsAppMsg::OpenEnvironmentSettingsPage => unsafe {
-                PREFERENCES_WINDOW.as_ref()
+                PREFERENCES_WINDOW
+                    .as_ref()
                     .unwrap_unchecked()
                     .widget()
                     .push_subpage(self.environment_page.widget());
-            }
+            },
 
             EnhancementsAppMsg::Toast { title, description } => {
-                sender.output(PreferencesAppMsg::Toast {
-                    title,
-                    description
-                }).unwrap();
+                sender
+                    .output(PreferencesAppMsg::Toast { title, description })
+                    .unwrap();
             }
         }
     }

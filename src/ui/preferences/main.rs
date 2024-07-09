@@ -1,24 +1,24 @@
 use relm4::prelude::*;
 
-use gtk::prelude::*;
 use adw::prelude::*;
+use gtk::prelude::*;
 
 use anime_launcher_sdk::anime_game_core::zzz::prelude::*;
 
 use anime_launcher_sdk::config::ConfigExt;
-use anime_launcher_sdk::zzz::config::Config;
 use anime_launcher_sdk::zzz::config::schema::launcher::LauncherStyle;
+use anime_launcher_sdk::zzz::config::Config;
 
 use crate::tr;
 
-use super::general::*;
 use super::enhancements::*;
+use super::general::*;
 
 pub static mut PREFERENCES_WINDOW: Option<adw::PreferencesWindow> = None;
 
 pub struct PreferencesApp {
     general: AsyncController<GeneralApp>,
-    enhancements: AsyncController<EnhancementsApp>
+    enhancements: AsyncController<EnhancementsApp>,
 }
 
 #[derive(Debug, Clone)]
@@ -33,8 +33,8 @@ pub enum PreferencesAppMsg {
 
     Toast {
         title: String,
-        description: Option<String>
-    }
+        description: Option<String>,
+    },
 }
 
 #[relm4::component(async, pub)]
@@ -68,7 +68,11 @@ impl SimpleAsyncComponent for PreferencesApp {
         }
     }
 
-    async fn init(parent: Self::Init, root: Self::Root, sender: AsyncComponentSender<Self>) -> AsyncComponentParts<Self> {
+    async fn init(
+        parent: Self::Init,
+        root: Self::Root,
+        sender: AsyncComponentSender<Self>,
+    ) -> AsyncComponentParts<Self> {
         tracing::info!("Initializing preferences window");
 
         let model = Self {
@@ -78,7 +82,7 @@ impl SimpleAsyncComponent for PreferencesApp {
 
             enhancements: EnhancementsApp::builder()
                 .launch(())
-                .forward(sender.input_sender(), std::convert::identity)
+                .forward(sender.input_sender(), std::convert::identity),
         };
 
         let widgets = view_output!();
@@ -89,7 +93,9 @@ impl SimpleAsyncComponent for PreferencesApp {
             PREFERENCES_WINDOW = Some(widgets.preferences_window.clone());
         }
 
-        model.enhancements.emit(EnhancementsAppMsg::SetGamescopeParent);
+        model
+            .enhancements
+            .emit(EnhancementsAppMsg::SetGamescopeParent);
 
         model.general.emit(GeneralAppMsg::UpdateDownloadedWine);
         model.general.emit(GeneralAppMsg::UpdateDownloadedDxvk);
@@ -114,7 +120,7 @@ impl SimpleAsyncComponent for PreferencesApp {
             PreferencesAppMsg::UpdateLauncherState => {
                 sender.output(Self::Output::UpdateLauncherState {
                     perform_on_download_needed: false,
-                    show_status_page: false
+                    show_status_page: false,
                 });
             }
 
@@ -123,7 +129,7 @@ impl SimpleAsyncComponent for PreferencesApp {
                 PREFERENCES_WINDOW.as_ref().unwrap_unchecked().close();
 
                 sender.output(Self::Output::RepairGame);
-            }
+            },
 
             PreferencesAppMsg::Toast { title, description } => unsafe {
                 let toast = adw::Toast::new(&title);
@@ -133,7 +139,11 @@ impl SimpleAsyncComponent for PreferencesApp {
                 if let Some(description) = description {
                     toast.set_button_label(Some(&tr!("details")));
 
-                    let dialog = adw::MessageDialog::new(PREFERENCES_WINDOW.as_ref(), Some(&title), Some(&description));
+                    let dialog = adw::MessageDialog::new(
+                        PREFERENCES_WINDOW.as_ref(),
+                        Some(&title),
+                        Some(&description),
+                    );
 
                     dialog.add_response("close", &tr!("close", { "form" = "noun" }));
                     dialog.add_response("save", &tr!("save"));
@@ -151,8 +161,11 @@ impl SimpleAsyncComponent for PreferencesApp {
                     });
                 }
 
-                PREFERENCES_WINDOW.as_ref().unwrap_unchecked().add_toast(toast);
-            }
+                PREFERENCES_WINDOW
+                    .as_ref()
+                    .unwrap_unchecked()
+                    .add_toast(toast);
+            },
         }
     }
 }

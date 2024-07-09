@@ -29,22 +29,21 @@ pub const SUPPORTED_LANGUAGES: &[LanguageIdentifier] = &[
     langid!("nl-nl"),
     langid!("uk-ua"),
     langid!("th-th"),
-    langid!("cs-cz")
+    langid!("cs-cz"),
 ];
 
 pub static mut LANG: LanguageIdentifier = langid!("en-us");
 
 /// Set launcher language
 pub fn set_lang(lang: LanguageIdentifier) -> anyhow::Result<()> {
-    if SUPPORTED_LANGUAGES.iter().any(|item| item.language == lang.language) {
-        unsafe {
-            LANG = lang
-        }
+    if SUPPORTED_LANGUAGES
+        .iter()
+        .any(|item| item.language == lang.language)
+    {
+        unsafe { LANG = lang }
 
         Ok(())
-    }
-
-    else {
+    } else {
         anyhow::bail!("Language '{lang}' is not supported")
     }
 }
@@ -55,16 +54,17 @@ pub fn get_lang() -> LanguageIdentifier {
 }
 
 /// Get system language or default language if system one is not supported
-/// 
+///
 /// Checks env variables in following order:
 /// - `LC_ALL`
 /// - `LC_MESSAGES`
 /// - `LANG`
 pub fn get_default_lang() -> LanguageIdentifier {
     let current = std::env::var("LC_ALL")
-        .unwrap_or_else(|_| std::env::var("LC_MESSAGES")
-        .unwrap_or_else(|_| std::env::var("LANG")
-        .unwrap_or_else(|_| String::from("en_us"))))
+        .unwrap_or_else(|_| {
+            std::env::var("LC_MESSAGES")
+                .unwrap_or_else(|_| std::env::var("LANG").unwrap_or_else(|_| String::from("en_us")))
+        })
         .to_ascii_lowercase();
 
     for lang in SUPPORTED_LANGUAGES {
@@ -77,25 +77,29 @@ pub fn get_default_lang() -> LanguageIdentifier {
 }
 
 pub fn format_lang(lang: &LanguageIdentifier) -> String {
-    format!("{}-{}", lang.language, match lang.region {
-        Some(region) => region.to_string().to_ascii_lowercase(),
-        None => lang.language.to_string()
-    })
+    format!(
+        "{}-{}",
+        lang.language,
+        match lang.region {
+            Some(region) => region.to_string().to_ascii_lowercase(),
+            None => lang.language.to_string(),
+        }
+    )
 }
 
 #[macro_export]
 /// Get translated message by key, with optional translation parameters
-/// 
+///
 /// # Examples:
-/// 
+///
 /// Without parameters:
-/// 
+///
 /// ```no_run
 /// println!("Translated message: {}", tr!("launch"));
 /// ```
-/// 
+///
 /// With parameters:
-/// 
+///
 /// ```no_run
 /// println!("Translated message: {}", tr!("game-outdated", {
 ///     "latest" = "3.3.0"
