@@ -23,16 +23,7 @@
 
 | Distribution | Format | Wiki | Source |
 | - | - | - | - |
-| Fedora | Flatpak | [link](https://github.com/an-anime-team/sleepy-launcher/wiki/Installation#-any-distribution-flatpak) | - |
-| Arch Linux, Manjaro | AUR | [link](https://github.com/an-anime-team/sleepy-launcher/wiki/Installation#-arch-linux-aur) | [sleepy-launcher-bin](https://aur.archlinux.org/packages/sleepy-launcher-bin) |
-| Fedora, OpenSUSE | RPM | [link](https://github.com/an-anime-team/sleepy-launcher/wiki/Installation#-fedora-rpm) | [SL](https://build.opensuse.org/repositories/home:Maroxy:AAT-Apps/SL) |
-| Ubuntu | pacstall | - | [sleepy-launcher-bin](https://pacstall.dev/packages/sleepy-launcher-bin) |
-| Gentoo | ebuild | [link](https://github.com/an-anime-team/sleepy-launcher/wiki/Installation#-gentoo-linux-ebuild) | [aagl-ebuilds](https://github.com/an-anime-team/gentoo-ebuilds) |
-| NixOS | nixpkg | [link](https://github.com/an-anime-team/sleepy-launcher/wiki/Installation#-nixos-nixpkg) | [aagl-gtk-on-nix](https://github.com/ezKEa/aagl-gtk-on-nix) |
-
-To see the installation guides, please visit the wiki page [here](https://github.com/an-anime-team/sleepy-launcher/wiki/Installation)
-
-Lutris integration described [here](https://github.com/an-anime-team/sleepy-launcher/wiki/Installation#-lutris)
+| macOS | - | - | [link](https://github.com/aaaadev/sleepy-launcher/releases/tag/nightly-20240710-macOS) |
 
 ## Chinese version support
 
@@ -55,6 +46,14 @@ This should be automatically enabled if you're using zh_cn (Chinese) as your sys
 git clone --recursive https://github.com/an-anime-team/sleepy-launcher
 ```
 
+## Install Pre-requirements
+- libadwaita
+- gtk4
+
+```sh
+brew install libadwaita gtk4
+```
+
 ## Run app
 
 ```sh
@@ -64,7 +63,7 @@ cargo run
 ## Build app
 
 ```sh
-cargo build --release
+cargo bundle --release
 ```
 
 ## Updates strategy
