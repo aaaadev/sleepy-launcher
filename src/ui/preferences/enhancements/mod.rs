@@ -370,7 +370,8 @@ impl SimpleAsyncComponent for EnhancementsApp {
                     set_model = &gtk::StringList::new(&[
                         &tr!("none"),
                         "DXVK",
-                        "MangoHud"
+                        "MangoHud",
+                        "MetalHud"
                     ]),
 
                     set_selected: CONFIG.game.enhancements.hud.ordinal() as u32,
